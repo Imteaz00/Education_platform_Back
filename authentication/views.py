@@ -51,7 +51,7 @@ def signin(request):
 
         if userinfo is not None:
             login(request, userinfo)
-            return redirect("home")
+            return Response("welcome")
 
         else:
             messages.error(request, "Error in Username or Password")
@@ -86,36 +86,37 @@ def teacher_signup(request):
         return redirect("home")
 
 
-@api_view(["POST"])
+@api_view(["POST", "GET"])
 def signup(request):
     if request.method == "POST":
         username = request.data["username"]
+        fullname = request.data["fullname"]
         email = request.data["email"]
         password = request.data["password"]
-        password2 = request.data["password2"]
+        password2 = request.data["cpass"]
+        interest = request.data["it"]
 
 
         if User.objects.filter(username=username):
-            messages.error(request, "Username exists already")
-            return redirect("signup")
+            return Response("f")
         
         if password!= password2:
-            messages.error(request, "Both password does not match")
+            return Response("g")
         
-        userinfo = User.objects.create_user(username, email, password)
+        userinfo = User.objects.create_user(username, password)
 
         userinfo.save()
 
-        messages.success(request, "Account Created Successfully!")
-
-        return redirect("home")
-
+        return Response("gg")
+    return Response("Do")
 
 @api_view(["POST"])
 def create_admin(request):
     if request.method == "POST":
         username = request.data["username"]
-        # email = request.data["email"]
+        fullname = request.data["fullname"]
+        email = request.data["email"]
+        it = request.it["it"]
         password = request.data["password"]
         password2 = request.data["password2"]
 
@@ -128,7 +129,7 @@ def create_admin(request):
             messages.error(request, "Both password does not match")
             return redirect("create_admin")
         
-        userinfo = User.objects.create_superuser(username, password)
+        userinfo = User.objects.create_superuser(username, fullname, email, it, password)
 
         userinfo.save()
         
@@ -158,11 +159,6 @@ def admin_pass(request):
         
 @api_view(["POST","GET"])
 def test(request):
-    print(request.user.is_staff)
-    if request.method == "PUT":
-        abc = request.data["abc"]
-        request.user.abc = abc
-        return redirect("edit_profile")
     return Response("jaidfh")
 
         
