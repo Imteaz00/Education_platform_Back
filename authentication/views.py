@@ -6,39 +6,22 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from .serializers import UserinfoSerializer
 from django.http import HttpResponse, HttpRequest, JsonResponse
+from .models import Teacher, Student
 
 
 # Create your views here.
 @api_view(["GET", "POST"])
 def home(request):
     if request.method == "POST":
-        if "admin_signup" in request.data and request.data["admin_signin"] == 'True':
-            if request.user.is_staff:
-                return redirect("/admin")
-            else:
-                return redirect("admin_pass")
-            
-        if "signup" in request.data and request.data["signup"] == 'True':
-            return redirect("signup")
-        
-        if "t_signup" in request.data and request.data["t_signup"] == 'True':
-            return redirect("t_signup")
+        users = User.objects.all()
+        serializer = UserinfoSerializer(users, many = True)
+        return Response(serializer.data)
 
-        if "signin" in request.data and request.data["signin"] == 'True':
-            return redirect("signin")
-        
-        if "signout" in request.data and request.data["signout"] == 'True':
-            return redirect("signout")
-
-    users = User.objects.all()
-    serializer = UserinfoSerializer(users, many = True)
-    return Response(serializer.data)
-
-@api_view(["GET","POST"])
+@api_view(["POST"])
 def signout(request):
-    logout(request)
-    messages.success(request, 'Logged out')
-    return redirect("home")
+    if request.method == "POST":
+        logout(request)
+        return Response("bye")
 
 
 @api_view(["POST"])
@@ -53,38 +36,30 @@ def signin(request):
             login(request, userinfo)
             return Response("welcome")
 
-        else:
-            messages.error(request, "Error in Username or Password")
-    return Response("hsuijdhuf")
-
 
 @api_view(["POST"])
 def teacher_signup(request):
-     if request.method == "POST":
+    if request.method == "POST":
         username = request.data["username"]
-        # email = request.data["email"]
+        fullname = request.data["fullname"]
+        email = request.data["email"]
         password = request.data["password"]
-        password2 = request.data["password2"]
+        password2 = request.data["cpass"]
+        skills = request.data["skills"]
+
 
         if User.objects.filter(username=username):
-            print(123)
-            messages.error(request, "Username exists already")
-            return redirect("t_signup")
+            return Response("f")
         
         if password!= password2:
-            print(234)
-            messages.error(request, "Both password does not match")
-            return redirect("t_signup")
+            return Response("g")
         
-        userinfo = User.objects.create_user(username, password)
+        userinfo = Teacher.objects.create_user(username, password, email, fullname= fullname, skills = skills)
 
         userinfo.save()
-        
 
-        messages.success(request, "Account Created Successfully!")
-
-        return redirect("home")
-
+        return Response("gg")
+    return Response("Do")
 
 @api_view(["POST", "GET"])
 def signup(request):
@@ -103,7 +78,7 @@ def signup(request):
         if password!= password2:
             return Response("g")
         
-        userinfo = User.objects.create_user(username, password)
+        userinfo = Student.objects.create_user(username, password, email, fullname= fullname, it = interest)
 
         userinfo.save()
 
@@ -114,9 +89,9 @@ def signup(request):
 def create_admin(request):
     if request.method == "POST":
         username = request.data["username"]
-        fullname = request.data["fullname"]
+        # fullname = request.data["fullname"]
         email = request.data["email"]
-        it = request.it["it"]
+        # it = request.it["it"]
         password = request.data["password"]
         password2 = request.data["password2"]
 
@@ -129,7 +104,7 @@ def create_admin(request):
             messages.error(request, "Both password does not match")
             return redirect("create_admin")
         
-        userinfo = User.objects.create_superuser(username, fullname, email, it, password)
+        userinfo = User.objects.create_superuser(username, email, password)
 
         userinfo.save()
         
@@ -141,21 +116,61 @@ def create_admin(request):
 
 @api_view(["PUT"])
 def edit_profile(request):
-
     if request.method == "PUT":
-        abc = request.data["abc"]
-        request.user.abc = abc
-        return redirect("edit_profile")
-    return Response("jaidfh")
+        password = request.data["password"]
+        user = request.user
+        if password != request.user.password:
+            return Response("hacker")
+        
 
+        userinfo = User.objects.update(
+        username = request.data["username"],
+        email = request.data["email"],
+        interest = request.data["it"],
+        phone = request.data["phone"],
+        dob = request.data["dob"],
+        pic = request.data["pic"],
+        address = request.data["address"],
+        gender = request.data["gender"]
+        )
+
+        userinfo.save()
+        return Response("succerss")
 
 @api_view(["POST"])
-def admin_pass(request):
+def changePass(request):
     if request.method == "POST":
-        superpass = request.data["superpass"]
-        if superpass == "Hehheboy":
-            request.user.is_staff = True
-            return redirect("create_admin")
+        pass1 = request.data["pass1"]
+        pass2 = request.data["pass2"]
+        username = request.user.pk
+        user = User.objects.get(pk = username)
+
+        if pass1 != pass2:
+            return Response("g")
+
+        user.set_password(pass1)
+        user.save()
+
+
+# @api_view(["POST"])
+# def admin_pass(request):
+#     if request.method == "POST":
+#         superpass = request.data["superpass"]
+#         if superpass == "Hehheboy":
+#             request.user.is_staff = True
+#             return redirect("create_admin")
+#         myuser.user_permissions.add(permission, permission, ...)
+#         myuser.user_permissions.remove(permission, permission, ...)
+
+# @api_view(["POST","GET"])       
+# def teacher(request, house_id):
+#     teacher = Teacher.objects.get(pk = house_id)
+#     if request.user.is_authenticated:
+#         cart_items = Cart_item.objects.filter(cart=Cart.objects.get(manush=request.user))
+#         for item in cart_items:
+#             if item.house == house:
+#                 in_cart = True
+#                 break
         
 @api_view(["POST","GET"])
 def test(request):

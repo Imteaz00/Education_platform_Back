@@ -12,5 +12,6 @@ urlpatterns = [
     path("t_signup", views.teacher_signup, name = "t_signup"),
     # path("profile", views.profile, name = "profile"),
     path("edit_profile", views.edit_profile, name = "edit_profile"),
+    path("change_pass", views.changePass, name = "change_pass"),
     path("test", views.test, name = "test"),
 ]
